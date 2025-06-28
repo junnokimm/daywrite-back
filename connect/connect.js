@@ -12,7 +12,7 @@ const connect = () => {
       dbName: "daywrite", // 컬렉션을 관리하는 DB 이름
     })
     .then(() => {
-      console.llog("MongoDB 연결 성공");
+      console.log("MongoDB 연결 성공");
     })
     .catch((err) => {
       console.error("MongoDB 연결 실패");
