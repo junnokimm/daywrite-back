@@ -1,6 +1,8 @@
 import mongoose, { mongo } from "mongoose";
+import dotenv from "dotenv";
+dotenv.config();
 
-const connection_url = `mongodb+srv://1endloopdaywrite:cyVCvCjp4ahuZAl3@cluster0.oy2hccr.mongodb.net/daywrite?retryWrites=true&w=majority`;
+const connection_URI = process.env.MONGO_URI;
 
 const connect = () => {
   if (process.env.NODE_ENV !== "production") {
@@ -8,7 +10,7 @@ const connect = () => {
   }
 
   mongoose
-    .connect(connection_url, {
+    .connect(connection_URI, {
       dbName: "daywrite", // 컬렉션을 관리하는 DB 이름
     })
     .then(() => {

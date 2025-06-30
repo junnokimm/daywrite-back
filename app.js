@@ -32,6 +32,7 @@ app.get("/", (req, res) => {
   res.send("서버 연결 성공!");
 });
 
+
 // 라우터
 app.use("/", rootRouter);
 
