@@ -1,7 +1,6 @@
 import express from 'express';
 import Faq from '../../models/faqSchema.js';
 
-
 const router = express.Router();
 
 // FAQ 전체 조회
