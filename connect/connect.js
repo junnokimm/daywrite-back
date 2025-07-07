@@ -17,7 +17,7 @@ const connect = () => {
       console.log("MongoDB 연결 성공");
     })
     .catch((err) => {
-      console.error("MongoDB 연결 실패");
+      console.error("MongoDB 연결 실패" , err.message);
     });
 };
 
