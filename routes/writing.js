@@ -1,6 +1,7 @@
 // routes/writing.js
 import express from "express";
-import Writing from "../models/Writing.js";
+import scriptSchema from "../models/main/scriptSchema.js";
+
 
 const router = express.Router();
 
@@ -9,7 +10,7 @@ router.post("/random", async (req, res) => {
   const { keywords = [], genres = [] } = req.body;
 
   try {
-    const result = await Writing.aggregate([
+    const result = await scriptSchema.aggregate([
       {
         $match: {
           keyword: { $in: keywords },
