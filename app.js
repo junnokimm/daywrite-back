@@ -5,6 +5,7 @@ import cors from "cors";
 import rootRouter from "./routes/rootRouter.js";
 import writingRouter from './routes/writing.js'
 import mainRouter from "./routes/mainRandom.js"
+import musicRouter from "./routes/music.js"
 import faqRouter from "./routes/faq/faqRouter.js";
 
 // 환경 변수 설정
@@ -38,6 +39,7 @@ app.get("/", (req, res) => {
 
 // 라우터
 app.use('/api/writing', writingRouter);
+app.use("/api/music", musicRouter)
 app.use("/", rootRouter);
 app.use("/api/faq", faqRouter);
 
