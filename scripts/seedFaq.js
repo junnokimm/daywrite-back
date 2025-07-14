@@ -1,54 +1,42 @@
-// scripts/seedFaq.js
-
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// models 불러오기
 import Faq from '../models/faqSchema.js';
+import faqData from '../dummyData/faqData.js';
 
-// __dirname 설정
+// __dirname 설정 (ESM 환경용)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// .env 로드
+// ✅ dotenv 설정 (.env가 프로젝트 루트에 위치한다고 가정)
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+if (!mongoUri) {
+  console.error('❌ MONGO_URI가 undefined입니다. .env 파일을 확인하세요.');
+  process.exit(1);
+}
 
 const seedFaq = async () => {
   try {
-    console.log('📡 MongoDB 연결 중...');
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('✅ MongoDB 연결 성공');
+    console.log('🟡 MongoDB 연결 중...');
+    await mongoose.connect(mongoUri);
+    console.log('🟢 MongoDB 연결 성공');
 
-    const deleteResult = await Faq.deleteMany();
-    console.log('🧹 기존 FAQ 삭제 결과:', deleteResult);
+    await Faq.deleteMany();
+    console.log('🧹 기존 FAQ 삭제 완료');
 
-    const insertResult = await Faq.insertMany([
-      {
-        question: '주문을 취소하고 싶어요',
-        answer: 'My > 주문배송조회에서 즉시 취소 또는 취소 요청이 가능합니다.',
-      },
-      {
-        question: '배송은 얼마나 걸리나요?',
-        answer: '보통 2~3일 내 도착합니다.',
-      },
-    ]);
-    console.log('✅ FAQ 데이터 삽입 결과:', insertResult);
+    console.log('📦 삽입할 데이터:', faqData);
 
-    const allFaqs = await Faq.find();
-    console.log('🔍 현재 FAQ 컬렉션 데이터:', allFaqs);
-
-    await mongoose.disconnect();
-    console.log('🔌 DB 연결 해제 완료');
-    process.exit(0);
+    const result = await Faq.insertMany(faqData);
+    console.log(`✅ 총 ${result.length}개의 FAQ가 성공적으로 삽입되었습니다.`);
   } catch (err) {
-    console.error('❌ 에러 발생:', err);
-    process.exit(1);
+    console.error('❌ 삽입 중 오류 발생:', err);
+  } finally {
+    await mongoose.disconnect();
+    console.log('🔌 MongoDB 연결 종료');
   }
 };
 
 seedFaq();
-
-
-

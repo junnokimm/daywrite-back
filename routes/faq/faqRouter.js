@@ -1,9 +1,9 @@
+// routes/faq/faqRouter.js
 import express from 'express';
 import Faq from '../../models/faqSchema.js';
 
 const router = express.Router();
 
-// FAQ 전체 조회
 router.get('/', async (req, res) => {
   try {
     const faqs = await Faq.find();
