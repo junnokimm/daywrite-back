@@ -1,6 +1,5 @@
 import express from "express";
 import userRouter from "./user/userRouter.js";
-import musicRouter from "./music.js"; 
 
 const rootRouter = express.Router();
 
