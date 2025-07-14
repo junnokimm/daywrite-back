@@ -5,6 +5,7 @@ import cors from "cors";
 import rootRouter from "./routes/rootRouter.js";
 import writingRouter from './routes/writing.js'
 import mainRouter from "./routes/mainRandom.js"
+import musicRouter from "./routes/music.js"
 
 // 환경 변수 설정
 dotenv.config();
@@ -37,8 +38,9 @@ app.get("/", (req, res) => {
 
 // 라우터
 app.use('/api/writing', writingRouter);
+// app.use("/api/music", musicRouter)
+app.use("/api/music", musicRouter)
 app.use("/", rootRouter);
-
 app.use("/api/main", mainRouter);
 
 // 서버 실행
