@@ -38,7 +38,6 @@ app.get("/", (req, res) => {
 
 // 라우터
 app.use('/api/writing', writingRouter);
-// app.use("/api/music", musicRouter)
 app.use("/api/music", musicRouter)
 app.use("/", rootRouter);
 app.use("/api/main", mainRouter);
