@@ -5,6 +5,7 @@ import cors from "cors";
 import rootRouter from "./routes/rootRouter.js";
 import writingRouter from './routes/writing.js'
 import mainRouter from "./routes/mainRandom.js"
+import userRouter from "./routes/user/userRouter.js";
 
 // 환경 변수 설정
 dotenv.config();
