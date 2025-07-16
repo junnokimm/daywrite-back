@@ -18,7 +18,7 @@ export const register = async (req,res) => {
       // 회원 정보가 없을 때 유저를 등록
       console.log(req.body)
       const {email, password, nickname, name} = req.body
-
+      
       // // 비밀번호 암호화 - 추가함
       // const hashedPassword = await bcrypt.hash(password, 10)
     const saltRouns = 10; // 해시 강도 (설정값이 높으면 더 안전하다. 그 대신 느려진다.)

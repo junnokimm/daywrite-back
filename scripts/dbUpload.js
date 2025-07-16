@@ -9,8 +9,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // 경로 안정화
-const filePath = path.join(__dirname, '../dummyData/junnyData.json');
-const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+// const filePath = path.join(__dirname, '../dummyData/junnyData.json');
+// const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+
+// 이미지 저장
+const fs = require('fs');
+const img = fs.readFileSync('../dummyData/testImg.jpg');
 
 // DB 연결 및 업로드
 await mongoose.connect('mongodb+srv://1endloopdaywrite:1234@cluster0.eibaawc.mongodb.net/');

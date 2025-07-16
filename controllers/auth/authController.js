@@ -25,7 +25,7 @@ export const localStrategy = async (req, res, next) => {
         const accessToken = jwt.sign(
             {
                 email : authenticatedUser.email,
-                issuer : 'sehwan',
+                issuer : 'daywrite',
             },
             SECRET_KEY,
             {
