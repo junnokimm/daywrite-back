@@ -5,7 +5,8 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "seed:faq": "node ./scripts/seedFaq.js"
+    "seed:faq": "node ./scripts/seedFaq.js",
+    "seed:notice": "node ./scripts/seedNotice.js"
   },
   "dependencies": {
     "axios": "^1.10.0",

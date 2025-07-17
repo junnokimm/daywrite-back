@@ -7,6 +7,8 @@ import writingRouter from './routes/writing.js'
 import mainRouter from "./routes/mainRandom.js"
 import musicRouter from "./routes/music.js"
 import faqRouter from "./routes/faq/faqRouter.js";
+import noticeRouter from "./routes/notice/noticeRouter.js";
+import inquiryRouter from "./routes/inquiry/inquiryRouter.js";
 
 // 환경 변수 설정
 dotenv.config();
@@ -42,6 +44,8 @@ app.use('/api/writing', writingRouter);
 app.use("/api/music", musicRouter)
 app.use("/", rootRouter);
 app.use("/api/faq", faqRouter);
+app.use("/api/notice", noticeRouter);
+app.use("/api/inquiry", inquiryRouter);
 
 app.use("/api/main", mainRouter);
 
