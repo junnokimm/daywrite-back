@@ -3,6 +3,8 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import rootRouter from "./routes/rootRouter.js";
+import passport from "passport";
+import initializePassport from "./auth/auth.js";
 import writingRouter from './routes/writing.js'
 import mainRouter from "./routes/mainRandom.js"
 import musicRouter from "./routes/music.js"
@@ -19,6 +21,11 @@ connect();
 // 앱 초기화
 const app = express();
 const port = 8000;
+
+// 환경 변수 설정 - dotenv 사용
+dotenv.config();
+
+
 
 // cors 설정
 // app.use()는 미들웨어로서 어떤 요청이든 지정된 로직보다 먼저 작업한다.
@@ -48,6 +55,13 @@ app.use("/api/notice", noticeRouter);
 app.use("/api/inquiry", inquiryRouter);
 
 app.use("/api/main", mainRouter);
+
+// passport 설정
+// passport init()
+// initializePassport() 임포트 위에 .js까지 확인!
+app.use(passport.initialize())
+initializePassport()
+
 
 // 서버 실행
 app.listen(port, () => {

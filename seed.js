@@ -14,7 +14,8 @@ const seedData = [
     author: "김화진",
     publisher: "문학동네",
     publishedDate: "2022-10-26",
-    bookCover: "https://example.com/image1.jpg",
+    bookCover:
+      "https://i.postimg.cc/gJ7RNpKw/XL-12.jpg",
     keyword: ["사랑", "설렘"],
     genre: "소설",
   },
@@ -25,7 +26,8 @@ const seedData = [
     author: "최진영",
     publisher: "미메시스",
     publishedDate: "2018-09-01",
-    bookCover: "https://example.com/image2.jpg",
+    bookCover:
+      "https://i.postimg.cc/pVY5mKwh/XL-11.jpg",
     keyword: ["외로움", "우울한"],
     genre: "소설",
   },
@@ -36,7 +38,8 @@ const seedData = [
     author: "비욘 나티코 린데블라드",
     publisher: "다산초당",
     publishedDate: "2024-01-08",
-    bookCover: "https://example.com/image3.jpg",
+    bookCover:
+      "https://i.postimg.cc/zG9GtBmY/XL-1.jpg",
     keyword: ["위로", "마음"],
     genre: "인문",
   },
