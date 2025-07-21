@@ -2,7 +2,7 @@
 import { getRecommendedTracks } from "../utils/lastfm.js";
 
 const genreMap = {
-  '소설': 'ballad',
+  '소설': 'pop',
   '시': 'acoustic',
   '에세이': 'chill',
   '철학': 'instrumental',
@@ -39,11 +39,11 @@ export const getMusicByKeywordAndGenre = async (req, res) => {
             finalTracks.push(track); // 처음 본 곡이면 최종 리스트에 추가함
             trackSet.add(key); // 이 곡을 보았음을 기록
           }
-          if (finalTracks.length >= 10) break; // 곡이 10개가 되면 중단
+          if (finalTracks.length >= 6) break; // 곡이 6개가 되면 중단
         }
-        if (finalTracks.length >= 10) break;
+        if (finalTracks.length >= 6) break;
       }
-      if (finalTracks.length >= 10) break;
+      if (finalTracks.length >= 6) break;
     }
 
   // 2. fallback : keyword 만으로 추가 검색 - 첫 번째 추천 결과가 너무 부족할 때를 위한 대비책
@@ -59,9 +59,9 @@ export const getMusicByKeywordAndGenre = async (req, res) => {
           finalTracks.push(track);
           trackSet.add(key);
         }
-        if (finalTracks.length >= 10 ) break;
+        if (finalTracks.length >= 6 ) break;
       }
-      if (finalTracks.length >= 10) break;
+      if (finalTracks.length >= 6) break;
     }
   }
   return res.status(200).json({tracks: shuffleArray(finalTracks)});
