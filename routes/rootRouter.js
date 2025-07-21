@@ -7,6 +7,7 @@ import noticeRouter from "./notice/noticeRouter.js";
 import historyRouter from "./history/historyRouter.js";
 import bookmarkRouter from "./bookmark/bookmarkRouter.js";
 import authRouter from "./auth/authRouter.js";
+import bookmarkNewFolder from "./bookmark/bookmarkNewFolderRouter.js";
 
 const rootRouter = express.Router();
 
@@ -18,5 +19,8 @@ rootRouter.use("/images", imagesRouter);
 rootRouter.use("/faq", faqRouter);
 rootRouter.use("/notice", noticeRouter);
 rootRouter.use("/auth/", authRouter)
+rootRouter.use("/bookmarkFolder", bookmarkRouter);
+rootRouter.use("/NewFolder", bookmarkNewFolder);
+rootRouter.use('/bookmarks', bookmarkNewFolder);
 
 export default rootRouter;
