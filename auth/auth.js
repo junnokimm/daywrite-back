@@ -44,8 +44,8 @@ const passwordVerify = async (email, password, done) => {
 
 const jwtConfig = {
     jwtFromRequest : ExtractJwt.fromAuthHeaderAsBearerToken(),
-    // secretOrKey : SECRET_KEY,
-    secretOrKey: process.env.SECRET_KEY,
+    // secretOrKey : JWT_SECRET,
+    secretOrKey: process.env.JWT_SECRET,
 }
 
 const jwtVerify = async (jwtPayload, done) => {

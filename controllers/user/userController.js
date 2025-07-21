@@ -4,29 +4,29 @@ import bcrypt from "bcrypt";
 // 회원가입
 export const register = async (req,res) => {
 
-    // 회원 유무 확인
+    // 1. 회원 유무 확인
     const foundUser = await User.findOne({email: req.body.email}).lean() // .lean() Js에 직접 객체로 바꾸기 위한 메소드
 
-    // 회원이 있을 때
+    // 2. 회원이 있을 때 - 회원가입 할 수 없다.
     if(foundUser){
       console.log("요청확인!!!!!!")
       return res.status(409).json({ //mdn 상태코드 409 충돌 에러
-          registerStatus : false,
+          registerStatus : false,  //상태표시
           message : `이미 존재하는 이메일입니다. (${foundUser.provider})`
       })
     }else {
-      // 회원 정보가 없을 때 유저를 등록
+      // 3. 회원 정보가 없을 때 유저를 등록
       console.log(req.body)
       const {email, password, nickname, name} = req.body
       
-      // // 비밀번호 암호화 - 추가함
+      // 4. 비밀번호 암호화 - 추가함
       // const hashedPassword = await bcrypt.hash(password, 10)
     const saltRouns = 10; // 해시 강도 (설정값이 높으면 더 안전하다. 그 대신 느려진다.)
     bcrypt.hash(password, saltRouns, async (err, hashedPassword) => {
       if(err){
         console.error(err)
       }else {
-        // 유저를 등록
+        // 5. 유저를 등록
       await User.create({
         email,
         // password : password,
@@ -35,7 +35,7 @@ export const register = async (req,res) => {
         name
       })
 
-      // 상태를 화면으로 보낸다.
+      // 6. 상태를 화면으로 보낸다.
       res.status(200).json({
         registerSuccess : true,
         message : "축하합니다. 회원가입이 완료 되었습니다."
