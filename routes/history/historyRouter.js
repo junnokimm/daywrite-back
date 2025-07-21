@@ -25,4 +25,15 @@ router.get("/", async (req, res) => {
   }
 });
 
+// DELETE /api/history/:id
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await History.findByIdAndDelete(id);
+    res.status(200).json({ message: "삭제 완료" });
+  } catch (error) {
+    res.status(500).json({ error: "삭제 실패" });
+  }
+});
+
 export default router;
