@@ -121,41 +121,118 @@ import ImageUpload from '../../../models/images/imageUploadSchema.js';
 //     });
 // };
 
+// export const thumbnail = async (req, res) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).json({
+//         message: "No file uploaded.",
+//       });
+//     }
+
+//     const { filename, destination, originalname, mimetype, size } = req.file;
+
+//     const imageDoc = new ImageUpload({
+//       filename,
+//       path: destination,
+//       originalname,
+//       mimetype,
+//       size,
+//     });
+
+//     await imageDoc.save();
+
+//     // ✅ 경로 계산
+//     const absoluteFilePath = path.join(destination, filename);
+//     const relativePath = path.relative(path.join(process.cwd(), 'uploads'), absoluteFilePath);
+//     const fullUrl = `${req.protocol}://${req.get('host')}/uploads/${relativePath.replace(/\\/g, '/')}`;
+
+//     // res.status(200).json({
+//     //   message: "파일 업로드 및 DB 저장 성공",
+//     //   url: fullUrl,
+//     //   imageId: imageDoc._id,
+//     //   imagePath: imageDoc.path,
+//     //   imageName: imageDoc.filename,
+//     // });
+//     res.status(200).json({
+//       message: "이미지 업로드 성공",
+//       url: `/uploads/${filename}`,
+//       filename,
+//       imageId: imageDoc._id, // ✅ 이걸 클라이언트로 넘겨줌
+//     });
+
+
+//   } catch (error) {
+//     console.error("썸네일 업로드 에러:", error);
+//     res.status(500).json({ message: "Internal Server Error" });
+//   }
+// };
+
+// export const thumbnail = async (req, res) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).json({ message: "No file uploaded." });
+//     }
+
+//     const { filename, path: filePath, originalname, mimetype, size } = req.file;
+
+//     const savedImage = await ImageUpload.create({
+//       filename,
+//       path: filePath,
+//       originalname,
+//       mimetype,
+//       size,
+//     });
+
+//     // ✅ 클라이언트가 직접 불러올 수 있는 경로 전달
+//     const relativeUrl = `thumbnail/${new Date().getFullYear()}/${(new Date().getMonth() + 1)
+//       .toString()
+//       .padStart(2, '0')}/${filename}`;
+
+//     res.status(200).json({
+//       message: "Image uploaded successfully.",
+//       url: `${req.protocol}://${req.get("host")}/uploads/${relativeUrl}`,
+//       thumbnailUrl: relativeUrl, // ⬅️ DB에 저장할 값
+//       filename,
+//       imageId: savedImage._id,
+//     });
+//   } catch (error) {
+//     console.error("Image upload error:", error);
+//     res.status(500).json({ message: "Image upload failed." });
+//   }
+// };
+
 export const thumbnail = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({
-        message: "No file uploaded.",
-      });
+      return res.status(400).json({ message: "No file uploaded." });
     }
 
-    const { filename, destination, originalname, mimetype, size } = req.file;
+    const { filename, path: filePath, originalname, mimetype, size } = req.file;
 
-    const imageDoc = new ImageUpload({
+    const savedImage = await ImageUpload.create({
       filename,
-      path: destination,
+      path: filePath,
       originalname,
       mimetype,
       size,
     });
 
-    await imageDoc.save();
+    // ✅ 여기를 고칩니다 — URL 경로 생성
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
 
-    // ✅ 경로 계산
-    const absoluteFilePath = path.join(destination, filename);
-    const relativePath = path.relative(path.join(process.cwd(), 'uploads'), absoluteFilePath);
-    const fullUrl = `${req.protocol}://${req.get('host')}/uploads/${relativePath.replace(/\\/g, '/')}`;
+    const relativeUrl = `thumbnail/${year}/${month}/${filename}`;
 
     res.status(200).json({
-      message: "파일 업로드 및 DB 저장 성공",
-      url: fullUrl,
-      imageId: imageDoc._id,
-      imagePath: imageDoc.path,
-      imageName: imageDoc.filename,
+      message: "Image uploaded successfully.",
+      url: `${req.protocol}://${req.get("host")}/uploads/${relativeUrl}`,
+      thumbnailUrl: relativeUrl, // ⬅️ 이게 DB에 저장될 경로입니다
+      filename,
+      imageId: savedImage._id,
     });
-
   } catch (error) {
-    console.error("썸네일 업로드 에러:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Image upload error:", error);
+    res.status(500).json({ message: "Image upload failed." });
   }
 };
