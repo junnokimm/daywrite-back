@@ -40,14 +40,16 @@ export const createFolder = async (req, res) => {
 // 모든 폴더 가져오기 (ex: 사용자 ID가 있다면 필터링도 가능)
 export const getAllFolders = async (req, res) => {
   try {
-    const folders = await BookmarkFolder.find().populate('historyIds');
+    const folders = await BookmarkFolder.find().populate('historyIds').populate('imageUpload');
+    
 
     // history 개수 포함해서 정리
     const formatted = folders.map(folder => ({
       id: folder._id,
       title: folder.title,
       type: folder.type,
-      thumbnailUrl: folder.thumbnailUrl,
+      // thumbnailUrl: folder.thumbnailUrl,
+      thumbnailUrl: folder.imageUpload?.filename || null,
       count: folder.historyIds.length,
     }));
 

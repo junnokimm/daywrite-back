@@ -11,6 +11,7 @@ import musicRouter from "./routes/music.js"
 import faqRouter from "./routes/faq/faqRouter.js";
 import noticeRouter from "./routes/notice/noticeRouter.js";
 import inquiryRouter from "./routes/inquiry/inquiryRouter.js";
+import path from 'path';
 
 // 환경 변수 설정
 dotenv.config();
@@ -25,7 +26,8 @@ const port = 8000;
 // 환경 변수 설정 - dotenv 사용
 dotenv.config();
 
-
+// uploads 폴더를 정적으로 열기
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // cors 설정
 // app.use()는 미들웨어로서 어떤 요청이든 지정된 로직보다 먼저 작업한다.

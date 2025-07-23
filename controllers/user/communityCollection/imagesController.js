@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../../../models/userSchema.js';
+import path from 'path';
 import ImageUpload from '../../../models/images/imageUploadSchema.js';
 
 // export const thumbnail = async (req, res) => {
@@ -91,30 +92,70 @@ import ImageUpload from '../../../models/images/imageUploadSchema.js';
 //     });
 // };
 
+// export const thumbnail = async (req, res) => {
+//     if (!req.file) {
+//         return res.status(400).json({
+//             message: "No file uploaded.",
+//         });
+//     }
+
+//     const { filename, destination, originalname, mimetype, size } = req.file;
+
+//     // 새로운 이미지 정보 MongoDB에 저장
+//     const imageDoc = new ImageUpload({
+//         filename,
+//         path: destination,
+//         originalname,
+//         mimetype,
+//         size,
+//     });
+
+//     await imageDoc.save();
+
+//     res.status(200).json({
+//         message: "파일 업로드 및 DB 저장 성공",
+//         imageId: imageDoc._id,
+//         imagePath: imageDoc.path,
+//         imageName: imageDoc.filename,
+//         url: fullUrl,
+//     });
+// };
+
 export const thumbnail = async (req, res) => {
+  try {
     if (!req.file) {
-        return res.status(400).json({
-            message: "No file uploaded.",
-        });
+      return res.status(400).json({
+        message: "No file uploaded.",
+      });
     }
 
     const { filename, destination, originalname, mimetype, size } = req.file;
 
-    // 새로운 이미지 정보 MongoDB에 저장
     const imageDoc = new ImageUpload({
-        filename,
-        path: destination,
-        originalname,
-        mimetype,
-        size,
+      filename,
+      path: destination,
+      originalname,
+      mimetype,
+      size,
     });
 
     await imageDoc.save();
 
+    // ✅ 경로 계산
+    const absoluteFilePath = path.join(destination, filename);
+    const relativePath = path.relative(path.join(process.cwd(), 'uploads'), absoluteFilePath);
+    const fullUrl = `${req.protocol}://${req.get('host')}/uploads/${relativePath.replace(/\\/g, '/')}`;
+
     res.status(200).json({
-        message: "파일 업로드 및 DB 저장 성공",
-        imageId: imageDoc._id,
-        imagePath: imageDoc.path,
-        imageName: imageDoc.filename,
+      message: "파일 업로드 및 DB 저장 성공",
+      url: fullUrl,
+      imageId: imageDoc._id,
+      imagePath: imageDoc.path,
+      imageName: imageDoc.filename,
     });
+
+  } catch (error) {
+    console.error("썸네일 업로드 에러:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 };
