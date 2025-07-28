@@ -8,6 +8,7 @@ import historyRouter from "./history/historyRouter.js";
 import bookmarkRouter from "./bookmark/bookmarkRouter.js";
 import authRouter from "./auth/authRouter.js";
 import bookmarkNewFolder from "./bookmark/bookmarkNewFolderRouter.js";
+import playList from "./bookmark/playListRouter.js";
 
 const rootRouter = express.Router();
 
@@ -22,5 +23,6 @@ rootRouter.use("/auth/", authRouter)
 rootRouter.use("/bookmarkFolder", bookmarkRouter);
 rootRouter.use("/NewFolder", bookmarkNewFolder);
 rootRouter.use('/bookmarks', bookmarkNewFolder);
+rootRouter.use("/api/playList", playList)
 
 export default rootRouter;
