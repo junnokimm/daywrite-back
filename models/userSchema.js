@@ -2,10 +2,11 @@ import { Schema, model } from "mongoose";
 import { getCurrentTime } from "../utils/utils.js";
 
 const userSchema = new Schema({
+  name: String,
+  phonenum: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   nickname: { type: String, required: true, unique: true },
-  name: String,
   token: String,
   provider: { type: String, default: "local" },
 
