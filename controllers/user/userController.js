@@ -4,43 +4,43 @@ import bcrypt from "bcrypt";
 // 회원가입
 export const register = async (req,res) => {
 
-    // 회원 유무 확인
+    // 1. 회원 유무 확인
     const foundUser = await User.findOne({email: req.body.email}).lean() // .lean() Js에 직접 객체로 바꾸기 위한 메소드
 
-    // 회원이 있을 때
+    // 2. 회원이 있을 때 - 회원가입 할 수 없다.
     if(foundUser){
       console.log("요청확인!!!!!!")
       return res.status(409).json({ //mdn 상태코드 409 충돌 에러
-          registerStatus : false,
+          registerStatus : false,  //상태표시
           message : `이미 존재하는 이메일입니다. (${foundUser.provider})`
       })
     }else {
-      // 회원 정보가 없을 때 유저를 등록
+      // 3. 회원 정보가 없을 때 유저를 등록
       console.log(req.body)
-      const {email, password, nickname, name} = req.body
+      const {name, email, password, nickname, phonenum} = req.body
       
-      // // 비밀번호 암호화 - 추가함
+      // 4. 비밀번호 암호화 - 추가함
       // const hashedPassword = await bcrypt.hash(password, 10)
     const saltRouns = 10; // 해시 강도 (설정값이 높으면 더 안전하다. 그 대신 느려진다.)
     bcrypt.hash(password, saltRouns, async (err, hashedPassword) => {
       if(err){
         console.error(err)
       }else {
-        // 유저를 등록
-      await User.create({
-        email,
-        // password : password,
-        password: hashedPassword,  // 암호화된 비밀번호로 저장 - 수정함
-        nickname,
-        name
-      })
+        // 5. 유저를 등록
+        await User.create({
+          name,
+          phonenum,
+          email,
+          nickname,
+          password: hashedPassword
+        })
 
-      // 상태를 화면으로 보낸다.
-      res.status(200).json({
-        registerSuccess : true,
-        message : "축하합니다. 회원가입이 완료 되었습니다."
-      })
-    }
+        // 6. 상태를 화면으로 보낸다.
+        res.status(201).json({
+          registerSuccess : true,
+          message : "축하합니다. 회원가입이 완료 되었습니다."
+        })
+      }
     })
   }
 };
@@ -67,6 +67,7 @@ export const loginUser = async (req, res) => {
         console.error(err)
       }else if(result){
         // 비밀번호 일치
+        console.log("result", result)
         const {password, ...currentUser} = foundUser;
         
         return res.status(200).json({
@@ -74,7 +75,7 @@ export const loginUser = async (req, res) => {
           isLogin : true,
           message : "로그인이 완료되었습니다."
         })
-
+        
       }else {
         // 비밀번호 불일치
           return res.status(401).json({
@@ -88,6 +89,74 @@ export const loginUser = async (req, res) => {
 
 
 }
+
+// 아이디 찾기
+export const findUserId = async (req, res) => {
+  const { name, phonenum } = req.body;
+
+  try {
+    const user = await User.findOne({ name, phonenum }).lean();
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "일치하는 사용자가 없습니다.",
+      });
+    }
+
+    return res.json({
+      success: true,
+      email: user.email,
+    });
+  } catch (error) {
+    console.error("아이디 찾기 오류:", error);
+    return res.status(500).json({
+      success: false,
+      message: "서버 오류",
+    });
+  }
+};
+
+
+// 비밀번호 찾기
+export const findUserPassword = async (req, res) => {
+  const { name, phonenum, email } = req.body;
+
+  try {
+    const user = await User.findOne({ name, phonenum, email }).lean();
+    if (!user) {
+      return res.status(404).json({ success: false, message: "일치하는 사용자가 없습니다." });
+    }
+
+    // 실제 서비스에서는 임시 비밀번호를 발송하거나 인증 후 비밀번호 재설정을 유도해야 합니다.
+    return res.json({ success: true, message: "비밀번호 재설정 링크를 이메일로 보내드립니다." });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: "서버 오류" });
+  }
+};
+
+
+// 비밀번호 재설정
+export const resetPassword = async (req, res) => {
+  const { email, newPassword } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: '존재하지 않는 이메일입니다.' });
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+
+    await user.save();
+
+    return res.status(200).json({ success: true, message: '비밀번호가 재설정되었습니다.' });
+  } catch (err) {
+    console.error('비밀번호 재설정 오류:', err);
+    return res.status(500).json({ success: false, message: '서버 오류' });
+  }
+};
+
 
 // 회원정보 수정
 export const modifyUser = (req, res) => {}
