@@ -19,4 +19,5 @@ rootRouter.use("/faq", faqRouter);
 rootRouter.use("/notice", noticeRouter);
 rootRouter.use("/auth/", authRouter)
 
+
 export default rootRouter;
