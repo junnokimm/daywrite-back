@@ -11,6 +11,10 @@ const historySchema = new mongoose.Schema({
   genre: [String],
   music: String,
   artist: String,
+  mood: {
+    type:String,
+    default:"#FFFFFF"
+  },                                                            
   createdAt: {
     type: Date,
     default: Date.now,
