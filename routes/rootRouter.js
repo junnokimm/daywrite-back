@@ -1,3 +1,5 @@
+// rootRouter.js 부분
+
 import express from "express";
 import userRouter from "./user/userRouter.js";
 import mainScript from "./mainScript.js";
@@ -12,15 +14,15 @@ import playList from "./bookmark/playListRouter.js";
 
 const rootRouter = express.Router();
 
-rootRouter.use("/users/api", userRouter);
+rootRouter.use("/users", userRouter);
 rootRouter.use("/main", mainScript);
-rootRouter.use("/api/history", historyRouter);
-rootRouter.use("/api/bookmarks", bookmarkRouter);
+rootRouter.use("/history", historyRouter);
+rootRouter.use("/bookmarks", bookmarkRouter);
 rootRouter.use("/images", imagesRouter);
 rootRouter.use("/faq", faqRouter);
 rootRouter.use("/notice", noticeRouter);
-rootRouter.use("/auth/", authRouter)
-rootRouter.use("/bookmarkFolder", bookmarkRouter);
+rootRouter.use("/auth", authRouter)
+rootRouter.use("/bookmarkFolder", bookmarkNewFolder);
 rootRouter.use("/NewFolder", bookmarkNewFolder);
 rootRouter.use('/bookmarks', bookmarkNewFolder);
 rootRouter.use("/api/playList", playList);

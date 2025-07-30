@@ -1,5 +1,5 @@
+import History from '../historySchema.js';
 import mongoose from 'mongoose';
-import "../images/imageUploadSchema.js"
 
 const BookmarkFolderSchema = new mongoose.Schema({
   title: { type: String, required: true },

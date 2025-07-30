@@ -5,12 +5,14 @@ import cors from "cors";
 import rootRouter from "./routes/rootRouter.js";
 import passport from "passport";
 import initializePassport from "./auth/auth.js";
-import writingRouter from './routes/writing.js'
-import mainRouter from "./routes/mainRandom.js"
-import musicRouter from "./routes/music.js"
+import writingRouter from './routes/writing.js';
+import mainRouter from "./routes/mainRandom.js";
+import musicRouter from "./routes/music.js";
 import faqRouter from "./routes/faq/faqRouter.js";
 import noticeRouter from "./routes/notice/noticeRouter.js";
 import inquiryRouter from "./routes/inquiry/inquiryRouter.js";
+import authRouter from "./routes/auth/authRouter.js";
+import userRouter from "./routes/user/userRouter.js";
 import path from 'path';
 
 // 환경 변수 설정
@@ -51,23 +53,25 @@ app.get("/", (req, res) => {
   res.send("서버 연결 성공!");
 });
 
-
+// 라우터 전에 passport 미들웨어가 먼저 실행하도록 로직 수정
 // 라우터
 app.use('/api/writing', writingRouter);
 app.use("/api/music", musicRouter)
-app.use("/", rootRouter);
 app.use("/api/faq", faqRouter);
 app.use("/api/notice", noticeRouter);
 app.use("/api/inquiry", inquiryRouter);
-
 app.use("/api/main", mainRouter);
+app.use("/auth", authRouter);
+app.use("/api/users", userRouter);
 
 // passport 설정
 // passport init()
 // initializePassport() 임포트 위에 .js까지 확인!
-app.use(passport.initialize())
+app.use(passport.initialize());
 initializePassport()
 
+// 모든 라우터는 rootRouter에서 관리
+app.use("/api", rootRouter);           // 여기 수정했어요
 
 // 서버 실행
 app.listen(port, () => {
