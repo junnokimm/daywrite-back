@@ -23,6 +23,6 @@ rootRouter.use("/auth/", authRouter)
 rootRouter.use("/bookmarkFolder", bookmarkRouter);
 rootRouter.use("/NewFolder", bookmarkNewFolder);
 rootRouter.use('/bookmarks', bookmarkNewFolder);
-rootRouter.use("/api/playList", playList)
+rootRouter.use("/api/playList", playList);
 
 export default rootRouter;
