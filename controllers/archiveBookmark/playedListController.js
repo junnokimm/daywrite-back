@@ -62,7 +62,7 @@ export const createPlayedFolder = async (req, res) => {
   const folder = await BookmarkPlayedFolder.create({
     title,
     thumbnailUrl,
-    playlistIds, // ✅ 이제 올바르게 전달됨
+    playlistIds, 
   });
 
   res.status(201).json({ message: "북마크 폴더 생성 완료", folder });
