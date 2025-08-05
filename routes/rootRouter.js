@@ -7,17 +7,19 @@ import noticeRouter from "./notice/noticeRouter.js";
 import historyRouter from "./history/historyRouter.js";
 import bookmarkRouter from "./bookmark/bookmarkRouter.js";
 import authRouter from "./auth/authRouter.js";
+import backgroundUploadRouter from "./background/backgroundUploadRouter.js";
 
 const rootRouter = express.Router();
 
-rootRouter.use("/users/api", userRouter);
+rootRouter.use("/users", userRouter);
 rootRouter.use("/main", mainScript);
-rootRouter.use("/api/history", historyRouter);
-rootRouter.use("/api/bookmarks", bookmarkRouter);
+rootRouter.use("/history", historyRouter);
+rootRouter.use("/bookmarks", bookmarkRouter);
 rootRouter.use("/images", imagesRouter);
 rootRouter.use("/faq", faqRouter);
 rootRouter.use("/notice", noticeRouter);
-rootRouter.use("/auth/", authRouter)
+rootRouter.use("/auth", authRouter)
+rootRouter.use('/background', backgroundUploadRouter);
 
 
 export default rootRouter;

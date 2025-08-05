@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
 
 dotenv.config();
-const SECRET_KEY = process.env.SECRET_KEY;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export const localStrategy = async (req, res, next) => {
 
@@ -27,7 +27,7 @@ export const localStrategy = async (req, res, next) => {
                 email : authenticatedUser.email,
                 issuer : 'daywrite',
             },
-            SECRET_KEY,
+            JWT_SECRET,
             {
                 expiresIn : '24h'
             }
