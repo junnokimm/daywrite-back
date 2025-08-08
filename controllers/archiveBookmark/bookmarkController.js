@@ -1,8 +1,9 @@
 import History from "../../models/historySchema.js";
 import BookmarkFolder from "../../models/bookmark/bookmarkFolderSchema.js";
 
+// history카드 조회
 export const bookmarkFolder = async (req, res) => {
- 
+//  console.log("GET /bookmarkFolder/newFolder 요청 도착");
     try {
         const bookmarkFolder = await History.find()
 
@@ -37,33 +38,6 @@ export const createFolder = async (req, res) => {
     res.status(500).json({ message: "폴더 생성 실패" });
   }
 };
-
-// 모든 폴더 가져오기 (ex: 사용자 ID가 있다면 필터링도 가능)
-// export const getAllFolders = async (req, res) => {
-//   try {
-//     const folders = await BookmarkFolder.find().populate('historyIds').populate('imageUpload');
-    
-//     // 여기! 확인용 로그
-//     folders.forEach(folder => {
-//       console.log("📦 folder.imageUpload:", folder.imageUpload);
-//     });
-
-//     // history 개수 포함해서 정리
-//     const formatted = folders.map(folder => ({
-//       id: folder._id,
-//       title: folder.title,
-//       type: folder.type,
-//       // thumbnailUrl: folder.thumbnailUrl,
-//       thumbnailUrl: folder.imageUpload?.filename || null,
-//       count: folder.historyIds.length,
-//     }));
-
-//     res.json(formatted);
-//   } catch (err) {
-//     console.error("폴더 조회 에러:", err);
-//     res.status(500).json({ message: "폴더 불러오기 실패" });
-//   }
-// };
 
 // 모든 폴더 가져오기
 export const getAllFolders = async (req, res) => {

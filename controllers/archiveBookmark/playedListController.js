@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import PlayList from "../../models/bookmark/playListSchema.js";
 import BookmarkPlayedFolder from "../../models/bookmark/bookmarkPlayedFolderSchema.js";
 import path from "path";
@@ -44,8 +45,11 @@ export const getLikedSongs = async (req, res) => {
 export const createPlayedFolder = async (req, res) => {
   
   try {
-    const { title, selectedIds } = req.body;
-
+    const { title, selectedIds, userId } = req.body;
+    // 유효한 ObjectId인지 검증
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "유효하지 않은 사용자 ID입니다." });
+    }
   let playlistIds = [];
   try {
     playlistIds = JSON.parse(selectedIds);
@@ -62,7 +66,9 @@ export const createPlayedFolder = async (req, res) => {
   const folder = await BookmarkPlayedFolder.create({
     title,
     thumbnailUrl,
-    playlistIds, 
+    playlistIds,
+    user: userId,
+    type: "곡",
   });
 
   res.status(201).json({ message: "북마크 폴더 생성 완료", folder });
@@ -75,13 +81,15 @@ export const createPlayedFolder = async (req, res) => {
 // 모든 Played 폴더 조회
 export const getAllPlayedFolders = async (req, res) => {
   try {
-    const folders = await BookmarkPlayedFolder.find().populate("playlistIds");
+    const folders = await BookmarkPlayedFolder.find().populate("playlistIds").populate("user", "nickname");;
     const result = folders.map(folder => ({
       id: folder._id,
       title: folder.title,
       thumbnailUrl: folder.thumbnailUrl,
       type: folder.type,
       count: folder.playlistIds.length,
+      likeCount: folder.likeCount,
+      userNickname: folder.user?.nickname || "알 수 없음", // ✅ 닉네임 추가
     }));
 
     res.status(200).json(result);

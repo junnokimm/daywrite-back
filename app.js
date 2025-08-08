@@ -13,6 +13,8 @@ import noticeRouter from "./routes/notice/noticeRouter.js";
 import inquiryRouter from "./routes/inquiry/inquiryRouter.js";
 import authRouter from "./routes/auth/authRouter.js";
 import userRouter from "./routes/user/userRouter.js";
+import backgroundUploadRouter from './routes/background/backgroundUploadRouter.js';
+
 import path from 'path';
 
 // 환경 변수 설정
@@ -63,6 +65,9 @@ app.use("/api/inquiry", inquiryRouter);
 app.use("/api/main", mainRouter);
 app.use("/auth", authRouter);
 app.use("/api/users", userRouter);
+app.use('/api/upload/background', backgroundUploadRouter);
+app.use('/uploads', express.static('uploads'));
+
 
 // passport 설정
 // passport init()
