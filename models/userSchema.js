@@ -10,13 +10,18 @@ const userSchema = new Schema({
   token: String,
   provider: { type: String, default: "local" },
 
-  createdAt: { type: String, default: getCurrentTime }, // 회원정보 수정
-  updatedAt: { type: String, default: getCurrentTime }, // 회원 탈퇴
+  // ✅ 프로필 이미지 경로 필드 추가
+  profileImageUrl: { type: String, default: "" },
+
+  // ✅ 커스텀 생성일·수정일 (별도 텍스트 저장용)
+  createdAt: { type: String, default: getCurrentTime },
+  updatedAt: { type: String, default: getCurrentTime },
 },
-  {
-    timestamps: true, // createdAt, updatedAt 자동 처리
-    versionKey: false, // __v 제거
-  }
-)
+{
+  // ✅ mongoose 기본 createdAt / updatedAt 타임스탬프
+  timestamps: true,
+  versionKey: false, // __v 제거
+});
 
 export default model("User", userSchema, "user");
+

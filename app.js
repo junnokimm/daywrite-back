@@ -82,3 +82,4 @@ app.use("/api", rootRouter);           // 여기 수정했어요
 app.listen(port, () => {
   console.log(`서버 실행 중: http://localhost:${port}`);
 });
+
