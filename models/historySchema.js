@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 const historySchema = new mongoose.Schema({
+  userId: { type: String, required: true },
   content: String,
   book: String,
   author: String,
@@ -12,9 +13,9 @@ const historySchema = new mongoose.Schema({
   music: String,
   artist: String,
   mood: {
-    type:String,
-    default:"#FFFFFF"
-  },                                                            
+    type: String,
+    default: "#FFFFFF",
+  },
   createdAt: {
     type: Date,
     default: Date.now,
