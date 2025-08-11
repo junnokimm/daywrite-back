@@ -47,7 +47,7 @@ export const getAllFolders = async (req, res) => {
       .populate('imageUpload');
 
     folders.forEach(folder => {
-      console.log("📦 folder.imageUpload:", folder.imageUpload);
+      // console.log("📦 folder.imageUpload:", folder.imageUpload);
     });
 
     const formatted = folders.map(folder => {
