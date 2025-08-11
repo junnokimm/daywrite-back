@@ -45,6 +45,40 @@ export const register = async (req,res) => {
   }
 };
 
+// 이메일 중복확인
+export const checkEmail = async (req, res) => {
+  const { email } = req.query;
+
+  try {
+    if (!email) return res.status(400).json({ message: '이메일 누락됨' });
+
+    const user = await User.findOne({ email });
+    return res.status(200).json({ exists: !!user });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: '서버 오류' });
+  }
+};
+
+
+
+// 닉네임 중복확인
+export const checkNickname = async (req, res) => {
+  const { nickname } = req.query;
+
+  try {
+    if (!nickname) return res.status(400).json({ message: '닉네임 누락됨' });
+
+    const user = await User.findOne({ nickname });
+    return res.status(200).json({ exists: !!user });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: '서버 오류' });
+  }
+};
+
+
+
 
 // 로그인
 export const loginUser = async (req, res) => {

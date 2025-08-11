@@ -26,4 +26,5 @@ rootRouter.use("/auth", authRouter);
 rootRouter.use("/bookmarkFolder", bookmarkNewFolder);
 rootRouter.use("/playList", playList);
 
+
 export default rootRouter;

@@ -58,13 +58,13 @@ app.get("/", (req, res) => {
 // 라우터 전에 passport 미들웨어가 먼저 실행하도록 로직 수정
 // 라우터
 app.use('/api/writing', writingRouter);
-app.use("/api/music", musicRouter)
+app.use("/api/music", musicRouter);
 app.use("/api/faq", faqRouter);
 app.use("/api/notice", noticeRouter);
 app.use("/api/inquiry", inquiryRouter);
 app.use("/api/main", mainRouter);
 app.use("/auth", authRouter);
-app.use("/api/users", userRouter);
+// app.use("/api/users", userRouter);   //rootRouter.js에 rootRouter.use("/users", userRouter);랑 중복으로 삭제
 app.use('/api/upload/background', backgroundUploadRouter);
 app.use('/uploads', express.static('uploads'));
 
