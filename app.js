@@ -15,6 +15,7 @@ import authRouter from "./routes/auth/authRouter.js";
 import userRouter from "./routes/user/userRouter.js";
 import backgroundUploadRouter from './routes/background/backgroundUploadRouter.js';
 
+import path from 'path';
 
 // 환경 변수 설정
 dotenv.config();
@@ -25,6 +26,16 @@ connect();
 // 앱 초기화
 const app = express();
 const port = 8000;
+
+// 환경 변수 설정 - dotenv 사용
+dotenv.config();
+
+// // uploads 폴더를 정적으로 열기
+// app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+const __dirname = path.resolve(); // ESM 환경이라면 필요
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // cors 설정
 // app.use()는 미들웨어로서 어떤 요청이든 지정된 로직보다 먼저 작업한다.
@@ -65,8 +76,7 @@ app.use(passport.initialize());
 initializePassport()
 
 // 모든 라우터는 rootRouter에서 관리
-app.use("/api", rootRouter);
-// app.use("/", rootRouter);
+app.use("/api", rootRouter);           // 여기 수정했어요
 
 // 서버 실행
 app.listen(port, () => {
