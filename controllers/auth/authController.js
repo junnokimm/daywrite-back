@@ -45,6 +45,7 @@ export const jwtStrategy = async (req, res, next) => {
     try {
         const jwtAuthenticatedUser = req.user;
         const {password, ...user} = jwtAuthenticatedUser;
+        console.log("jwtStrategy 사용자:", user); // ✅ 이 줄은 user 선언 이후에 위치해야 함
     
         res.status(200).json({
             message : "자동 로그인 성공",
