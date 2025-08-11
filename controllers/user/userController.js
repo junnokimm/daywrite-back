@@ -1,6 +1,7 @@
 import User from "../../models/userSchema.js";
 import bcrypt from "bcrypt";
 
+
 // 회원가입
 export const register = async (req,res) => {
 
@@ -193,10 +194,85 @@ export const resetPassword = async (req, res) => {
 
 
 // 회원정보 수정
-export const modifyUser = (req, res) => {}
+export const modifyUser = async (req, res) => {
+  const { id } = req.params;
+  const { nickname, password } = req.body;
+
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "사용자를 찾을 수 없습니다." });
+    }
+
+    // 닉네임 수정
+    if (nickname && typeof nickname === 'string') {
+      user.nickname = nickname;
+    }
+
+    // 비밀번호 수정
+    if (password && typeof password === 'string' && password.trim() !== '') {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      user.password = hashedPassword;
+    }
+
+    // 프로필 이미지 수정
+    if (req.file && req.file.filename) {
+      user.profileImageUrl = `/uploads/profile/${req.file.filename}`;
+    }
+
+    const updatedUser = await user.save();
+
+    if (!updatedUser) {
+      throw new Error("사용자 정보 저장 실패");
+    }
+
+    const { password: _, ...userWithoutPassword } = updatedUser.toObject();
+
+    return res.status(200).json(userWithoutPassword);
+  } catch (err) {
+    console.error("회원정보 수정 오류:", err.message);
+    return res.status(500).json({ message: "서버 오류", detail: err.message });
+  }
+};
+
+export const checkNicknameDuplicate = async (req, res) => {
+  try {
+    const { nickname } = req.query;
+
+    if (!nickname || nickname.trim() === '') {
+      return res.status(400).json({ message: '닉네임을 입력해주세요.' });
+    }
+
+    const existing = await User.findOne({ nickname });
+
+    if (existing) {
+      return res.status(409).json({ message: '이미 사용 중인 닉네임입니다.' });
+    }
+
+    return res.status(200).json({ message: '사용 가능한 닉네임입니다.' });
+  } catch (err) {
+    console.error("닉네임 중복 확인 오류:", err);
+    return res.status(500).json({ message: '서버 오류입니다.' });
+  }
+};
+
 
 // 회원탈퇴
-export const removeUser = (req, res) => {}
+export const removeUser = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await User.findByIdAndDelete(id);
+    if (!user) {
+      return res.status(404).json({ message: "사용자를 찾을 수 없습니다." });
+    }
+
+    res.status(200).json({ message: "회원 탈퇴가 완료되었습니다." });
+  } catch (err) {
+    console.error("회원 탈퇴 오류:", err);
+    res.status(500).json({ message: "서버 오류" });
+  }
+};
 
 // 프로필 변경
 export const modifyPicture = (req, res) => {}

@@ -9,12 +9,12 @@ const router = express.Router();
 
 const uploadFolder = "uploads/background";
 
-// 📁 폴더 없으면 생성
+// 📁 업로드 폴더 없으면 생성
 if (!fs.existsSync(uploadFolder)) {
   fs.mkdirSync(uploadFolder, { recursive: true });
 }
 
-// 📷 multer 설정
+// 📷 multer 설정 (10MB 제한)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadFolder);
@@ -25,10 +25,13 @@ const storage = multer.diskStorage({
     cb(null, `${baseName}-${Date.now()}${ext}`);
   },
 });
-const upload = multer({ storage });
 
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // ✅ 10MB 제한
+});
 
-// 🔹 [POST] 업로드 라우트
+// 🔹 [POST] 업로드
 router.post("/", upload.single("image"), async (req, res) => {
   const file = req.file;
 
@@ -41,7 +44,7 @@ router.post("/", upload.single("image"), async (req, res) => {
 
     const savedImage = await BackgroundImage.create({
       filename: file.filename,
-      path: imageUrl, // ✅ 항상 슬래시 포함
+      path: imageUrl,
       originalname: file.originalname,
       mimetype: file.mimetype,
       size: file.size,
@@ -58,13 +61,10 @@ router.post("/", upload.single("image"), async (req, res) => {
   }
 });
 
-
-// 🔹 [GET] 리스트 라우트
+// 🔹 [GET] 리스트
 router.get("/list", async (req, res) => {
   try {
     const images = await BackgroundImage.find().sort({ createdAt: -1 });
-
-    // ✅ 응답을 객체로 감싸기
     res.json({ images });
   } catch (error) {
     console.error("리스트 조회 오류:", error);
@@ -72,21 +72,17 @@ router.get("/list", async (req, res) => {
   }
 });
 
-
-// 🔹 [DELETE] 이미지 삭제 라우트
+// 🔹 [DELETE] 삭제
 router.delete("/:filename", async (req, res) => {
   const { filename } = req.params;
 
   try {
-    // 📁 파일 삭제
     const filePath = path.join(uploadFolder, filename);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
 
-    // 🗃️ DB에서도 삭제
     await BackgroundImage.deleteOne({ filename });
-
     res.json({ message: "삭제 완료" });
   } catch (error) {
     console.error("삭제 오류:", error);
@@ -95,3 +91,4 @@ router.delete("/:filename", async (req, res) => {
 });
 
 export default router;
+
