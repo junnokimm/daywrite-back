@@ -10,15 +10,15 @@ const userSchema = new Schema({
   token: String,
   provider: { type: String, default: "local" },
 
-  // ✅ 프로필 이미지 경로 필드 추가
+  // 프로필 이미지 경로 필드 추가
   profileImageUrl: { type: String, default: "" },
 
-  // ✅ 커스텀 생성일·수정일 (별도 텍스트 저장용)
+  // 커스텀 생성일·수정일 (별도 텍스트 저장용)
   createdAt: { type: String, default: getCurrentTime },
   updatedAt: { type: String, default: getCurrentTime },
 },
 {
-  // ✅ mongoose 기본 createdAt / updatedAt 타임스탬프
+  // mongoose 기본 createdAt / updatedAt 타임스탬프
   timestamps: true,
   versionKey: false, // __v 제거
 });
