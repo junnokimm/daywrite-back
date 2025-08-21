@@ -60,7 +60,7 @@ app.use("/api/inquiry", inquiryRouter);
 app.use("/api/main", mainRouter);
 app.use("/auth", authRouter);
 app.use("/api/upload/background", backgroundUploadRouter);
-// app.use('/uploads', express.static('uploads'));
+
 
 app.use(passport.initialize());
 initializePassport();
