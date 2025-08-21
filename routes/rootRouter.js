@@ -12,6 +12,7 @@ import authRouter from "./auth/authRouter.js";
 import backgroundUploadRouter from "./background/backgroundUploadRouter.js";
 import bookmarkNewFolder from "./bookmark/bookmarkNewFolderRouter.js";
 import playList from "./bookmark/playListRouter.js";
+import communityRouter from "./community/communityRouter.js";
 
 const rootRouter = express.Router();
 
@@ -25,6 +26,6 @@ rootRouter.use("/notice", noticeRouter);
 rootRouter.use("/auth", authRouter);
 rootRouter.use("/bookmarkFolder", bookmarkNewFolder);
 rootRouter.use("/playList", playList);
-
+rootRouter.use("/community", communityRouter);
 
 export default rootRouter;
