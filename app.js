@@ -66,7 +66,7 @@ app.use("/api/main", mainRouter);
 app.use("/auth", authRouter);
 // app.use("/api/users", userRouter);   //rootRouter.js에 rootRouter.use("/users", userRouter);랑 중복으로 삭제
 app.use('/api/upload/background', backgroundUploadRouter);
-app.use('/uploads', express.static('uploads'));
+// app.use('/uploads', express.static('uploads'));
 
 
 // passport 설정
