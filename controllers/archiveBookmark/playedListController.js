@@ -18,7 +18,18 @@ export const saveLikedSongs = async (req, res) => {
     }
 
     // const inserted = await PlayList.insertMany(songs); // 배열로 저장
-    const payload = songs.map(s => ({ ...s, userId }));
+    // const payload = songs.map(s => ({ ...s, userId }));
+    // ✅ 필드 정규화: 어떤 키로 와도 imageUrl에 모아 저장
+    const payload = songs.map((s) => ({
+      title: s.title || s.songTitle,
+      artist: s.artist || s.singer,
+      imageUrl: s.imageUrl || s.img || s.albumArt || null,
+      img: s.img ?? null,
+      albumArt: s.albumArt ?? null,
+      albumTitle: s.albumTitle || s.album || null,
+      userId,
+    }));
+
     const inserted = await PlayList.insertMany(payload);
 
     res.status(201).json({ message: "저장 완료", data: inserted });
@@ -172,6 +183,26 @@ export const createPlayedFolder = async (req, res) => {
 //   }
 // };
 
+// ✅ 공용 유틸: 문자열 경로를 항상 '/uploads/...' 또는 'http...'로 보정
+const normalizeThumbStr = (t) => {
+  if (!t) return null;
+  // 역슬래시 → 슬래시
+  t = String(t).replace(/\\/g, "/");
+
+  // 완전한 URL이면 그대로
+  if (/^https?:\/\//i.test(t)) return t;
+
+  // '/uploads/...'면 그대로
+  if (t.startsWith("/uploads/")) return t;
+
+  // 'uploads/...'면 앞에 '/' 붙이기
+  if (t.startsWith("uploads/")) return `/${t}`;
+
+  // 상대경로면 '/uploads/' 접두
+  return `/uploads/${t.replace(/^\/+/, "")}`;
+};
+
+
 // 모든 Played 폴더 조회 (내 것 + 타입옵션)
 export const getAllPlayedFolders = async (req, res) => {
   try {
@@ -194,7 +225,8 @@ export const getAllPlayedFolders = async (req, res) => {
     const result = folders.map(folder => ({
       id: folder._id,
       title: folder.title,
-      thumbnailUrl: folder.thumbnailUrl,  // 이미 /uploads/... 라고 가정
+      thumbnailUrl: normalizeThumbStr(folder.thumbnailUrl),
+      // thumbnailUrl: folder.thumbnailUrl,  // 이미 /uploads/... 라고 가정
       type: folder.type,                  // "곡"
       count: folder.playlistIds?.length || 0,
       likeCount: folder.likeCount ?? 0,   // 스키마에 없으면 항상 0
@@ -204,6 +236,105 @@ export const getAllPlayedFolders = async (req, res) => {
     res.status(200).json(result);
   } catch (err) {
     console.error("Played 폴더 전체 조회 실패:", err);
+    res.status(500).json({ message: "조회 실패" });
+  }
+};
+
+  // const normalizeThumb = (folder = {}) => {
+  // const t = folder.thumbnailUrl;
+  //   if (!t) return null;
+  //   if (/^https?:\/\//i.test(t)) return t;
+  //   if (t.startsWith("/uploads/")) return t;
+  //   if (t.startsWith("uploads/")) return `/${t}`;
+  //   return `/uploads/${t.replace(/^\/+/, "")}`;
+  // };
+
+// ✅ played 폴더 상세
+export const getPlayedFolderDetail = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "유효하지 않은 폴더 ID입니다." });
+    }
+
+    const folder = await BookmarkPlayedFolder.findById(id)
+      .populate("playlistIds")
+      .lean();
+
+    if (!folder) {
+      return res.status(404).json({ message: "폴더를 찾을 수 없습니다." });
+    }
+
+    // const thumbnailUrl = normalizeThumb(folder);
+    const thumbnailUrl = normalizeThumbStr(folder.thumbnailUrl);
+
+    // --- 핵심: populate 실패(또는 과거 데이터) 대비 폴백 ---
+    let songs = [];
+    const rawList = Array.isArray(folder.playlistIds) ? folder.playlistIds : [];
+    if (rawList.length === 0) {
+      songs = [];
+    } else if (typeof rawList[0] === "object" && rawList[0]?._id) {
+      // populate가 된 경우
+      songs = rawList;
+    } else {
+      // ObjectId(or 문자열) 배열만 들어있는 경우 → 직접 조회
+      const ids = rawList
+        .map((v) => {
+          try { return new mongoose.Types.ObjectId(String(v)); }
+          catch { return null; }
+        })
+        .filter(Boolean);
+      if (ids.length) {
+        songs = await PlayList.find({ _id: { $in: ids } })
+          .sort({ createdAt: -1 })
+          .lean();
+      } else {
+        songs = [];
+      }
+    }
+
+    // 프론트 카드가 다양한 키를 허용하긴 하지만, imageUrl 키를 하나 만들어 주면 더 안전
+    // const items = (folder.playlistIds || []).map((p) => ({
+    const items = (songs || []).map((p) => ({
+      ...p,
+      imageUrl: p.imageUrl || p.img || p.albumArt || null,
+    }));
+
+    res.json({
+      id: String(folder._id),
+      title: folder.title,
+      type: folder.type,         // "곡"
+      thumbnailUrl,              // '/uploads/...' 형태
+      count: items.length,
+      items,                     // 곡 배열
+    });
+  } catch (err) {
+    console.error("played 폴더 상세 실패:", err);
+    res.status(500).json({ message: "서버 에러" });
+  }
+};
+
+// ⭐ 공개 Top 5
+export const getTopPlayedFolders = async (req, res) => {
+  try {
+    const limit = Math.max(1, Math.min(50, Number(req.query.limit) || 5)); // 1~50
+    const folders = await BookmarkPlayedFolder.find({ type: "곡" })
+      .sort({ likeCount: -1, createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    const result = folders.map((f) => ({
+      id: String(f._id),
+      title: f.title,
+      type: f.type,
+      thumbnailUrl: normalizeThumbStr(f.thumbnailUrl),
+      count: Array.isArray(f.playlistIds) ? f.playlistIds.length : 0,
+      likeCount: f.likeCount ?? 0,
+    }));
+
+    res.json(result);
+  } catch (err) {
+    console.error("Top played folders 조회 실패:", err);
     res.status(500).json({ message: "조회 실패" });
   }
 };
