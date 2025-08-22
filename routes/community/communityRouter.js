@@ -14,23 +14,49 @@ router.post("/posts", async (req, res) => {
   }
 });
 
-// 공개 + 저장(게시) 목록
+// 공개 + 저장(게시) 목록: liked/likes 포함 (유일한 정의)
 router.get("/posts/public", async (req, res) => {
-  const { sort = "popular" } = req.query;
+  const { sort = "popular", userId } = req.query;
   const sortObj = sort === "recent" ? { createdAt: -1 } : { likes: -1, createdAt: -1 };
-  const items = await CommunityPost.find({ isPublic: true, status: "published" }).sort(sortObj).lean();
-  res.json({ items, total: items.length });
+
+  const items = await CommunityPost
+    .find({ isPublic: true, status: "published" })
+    .sort(sortObj)
+    .lean();
+
+  // 👉 userId가 ObjectId가 아니어도 비교 가능하게 느슨하게 처리
+  const uid = userId ? String(userId) : null;
+
+  const mapped = items.map((it) => ({
+    ...it,
+    likes: it.likes ?? (it.likedBy?.length || 0),
+    liked: uid ? (it.likedBy || []).some((v) => String(v) === uid) : false,
+  }));
+
+  res.json({ items: mapped, total: mapped.length });
 });
 
-// 내 글 목록
+// 내 글 목록: liked/likes 포함 (유일한 정의)
 router.get("/posts/mine", async (req, res) => {
   const { userId, status = "published" } = req.query;
   if (!userId) return res.status(400).json({ message: "userId required" });
-  const items = await CommunityPost.find({ userId, status }).sort({ createdAt: -1 }).lean();
-  res.json({ items, total: items.length });
+
+  const items = await CommunityPost
+    .find({ userId, status })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const uid = String(userId);
+  const mapped = items.map((it) => ({
+    ...it,
+    likes: it.likes ?? (it.likedBy?.length || 0),
+    liked: (it.likedBy || []).some((v) => String(v) === uid),
+  }));
+
+  res.json({ items: mapped, total: mapped.length });
 });
 
-// ✨ 수정
+// 수정
 router.put("/posts/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -38,7 +64,6 @@ router.put("/posts/:id", async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid id" });
     }
 
-    // 업데이트 가능한 필드만 선택적으로 허용 (보안/정합성)
     const allowed = [
       "title",
       "refAuthor",
@@ -46,13 +71,11 @@ router.put("/posts/:id", async (req, res) => {
       "musicTitle",
       "musicArtist",
       "isPublic",
-      "status",      // 'draft' | 'published'
-      "type",        // 'original' | 'reference' (변경 허용 시)
+      "status",
+      "type",
     ];
     const $set = {};
-    for (const k of allowed) {
-      if (k in req.body) $set[k] = req.body[k];
-    }
+    for (const k of allowed) if (k in req.body) $set[k] = req.body[k];
 
     const updated = await CommunityPost.findByIdAndUpdate(
       id,
@@ -60,9 +83,7 @@ router.put("/posts/:id", async (req, res) => {
       { new: true, runValidators: true }
     ).lean();
 
-    if (!updated) {
-      return res.status(404).json({ success: false, message: "Not found" });
-    }
+    if (!updated) return res.status(404).json({ success: false, message: "Not found" });
     return res.status(200).json({ success: true, item: updated });
   } catch (err) {
     console.error("[community update]", err);
@@ -89,6 +110,42 @@ router.delete("/posts/:id", async (req, res) => {
     return res.status(200).json({ success: true, deletedCount: 1 });
   } catch (err) {
     console.error("[community delete] ", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// 좋아요 토글
+router.post("/posts/:id/like", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.body;
+
+    if (!mongoose.isValidObjectId(id) || !mongoose.isValidObjectId(userId)) {
+      return res.status(400).json({ success: false, message: "Invalid id" });
+    }
+
+    const post = await CommunityPost.findById(id);
+    if (!post) return res.status(404).json({ success: false, message: "Not found" });
+
+    const uid = new mongoose.Types.ObjectId(userId);
+    const already = post.likedBy.some((v) => v.equals(uid));
+
+    if (already) {
+      post.likedBy = post.likedBy.filter((v) => !v.equals(uid));
+    } else {
+      post.likedBy.push(uid);
+    }
+    post.likes = post.likedBy.length;
+    await post.save();
+
+    return res.status(200).json({
+      success: true,
+      liked: !already,
+      likes: post.likes,
+      postId: post._id,
+    });
+  } catch (err) {
+    console.error("[community like]", err);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 });
