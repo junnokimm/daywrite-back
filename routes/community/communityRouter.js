@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 
 const router = express.Router();
 
-// 생성 (임시저장/저장 공통)
+// 생성
 router.post("/posts", async (req, res) => {
   try {
     const post = await CommunityPost.create(req.body);
@@ -15,7 +15,6 @@ router.post("/posts", async (req, res) => {
 });
 
 // 공개 + 저장(게시) 목록
-// GET /community/posts/public?sort=popular|recent
 router.get("/posts/public", async (req, res) => {
   const { sort = "popular" } = req.query;
   const sortObj = sort === "recent" ? { createdAt: -1 } : { likes: -1, createdAt: -1 };
@@ -24,12 +23,51 @@ router.get("/posts/public", async (req, res) => {
 });
 
 // 내 글 목록
-// GET /community/posts/mine?userId=...&status=published|draft
 router.get("/posts/mine", async (req, res) => {
   const { userId, status = "published" } = req.query;
   if (!userId) return res.status(400).json({ message: "userId required" });
   const items = await CommunityPost.find({ userId, status }).sort({ createdAt: -1 }).lean();
   res.json({ items, total: items.length });
+});
+
+// ✨ 수정
+router.put("/posts/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ success: false, message: "Invalid id" });
+    }
+
+    // 업데이트 가능한 필드만 선택적으로 허용 (보안/정합성)
+    const allowed = [
+      "title",
+      "refAuthor",
+      "content",
+      "musicTitle",
+      "musicArtist",
+      "isPublic",
+      "status",      // 'draft' | 'published'
+      "type",        // 'original' | 'reference' (변경 허용 시)
+    ];
+    const $set = {};
+    for (const k of allowed) {
+      if (k in req.body) $set[k] = req.body[k];
+    }
+
+    const updated = await CommunityPost.findByIdAndUpdate(
+      id,
+      { $set },
+      { new: true, runValidators: true }
+    ).lean();
+
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "Not found" });
+    }
+    return res.status(200).json({ success: true, item: updated });
+  } catch (err) {
+    console.error("[community update]", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
 });
 
 // 삭제
@@ -42,18 +80,13 @@ router.delete("/posts/:id", async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid id" });
     }
 
-    // 소유자 확인을 하고 싶다면 아래 조건 사용:
     const match = userId ? { _id: id, userId } : { _id: id };
-
     const result = await CommunityPost.deleteOne(match);
 
     if (result.deletedCount === 0) {
-      // 소유권 불일치 또는 존재하지 않는 문서
       return res.status(404).json({ success: false, deletedCount: 0 });
     }
     return res.status(200).json({ success: true, deletedCount: 1 });
-    // 또는 204 사용:
-    // return res.status(204).send();
   } catch (err) {
     console.error("[community delete] ", err);
     return res.status(500).json({ success: false, message: "Server error" });
