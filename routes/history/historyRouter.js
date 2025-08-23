@@ -28,7 +28,7 @@ router.post("/", async (req, res) => {
 router.get("/user/:userId", async (req, res) => {
   const { userId } = req.params;
   try {
-    const historyList = await History.find({ userId });
+    const historyList = await History.find({ userId }).sort({ createdAt:-1 });
     res.status(200).json(historyList);
   } catch (err) {
     res.status(500).json({ message: "히스토리 조회 실패" });
