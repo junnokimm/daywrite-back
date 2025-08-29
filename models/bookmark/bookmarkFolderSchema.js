@@ -8,7 +8,8 @@ const BookmarkFolderSchema = new mongoose.Schema({
   historyIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'History' }],
   thumbnailUrl: { type: String },
   createdAt: { type: Date, default: Date.now },
-  imageUpload: { type: mongoose.Schema.Types.ObjectId, ref: "ImageUpload"}
+  imageUpload: { type: mongoose.Schema.Types.ObjectId, ref: "ImageUpload"},
+  likeCount: { type: Number, default: 0, index: true },
 },{ timestamps: true });
 
 BookmarkFolderSchema.index({ ownerId: 1, createdAt: -1 });
