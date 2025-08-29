@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import History from "../../models/historySchema.js";
 import BookmarkFolder from "../../models/bookmark/bookmarkFolderSchema.js";
 
@@ -168,3 +169,81 @@ export const getTopTypedFolders = async (req, res) => {
     res.status(500).json({ message: "조회 실패" });
   }
 };
+
+// 폴더 제목 변경
+export const updateFolderTitle = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, userId } = req.body; // 토큰 미들웨어 없으면 userId 함께 받기
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "유효하지 않은 폴더 ID" });
+    }
+    if (!title || !title.trim()) {
+      return res.status(400).json({ message: "title 필요" });
+    }
+
+    const folder = await BookmarkFolder.findById(id);
+    if (!folder) return res.status(404).json({ message: "폴더를 찾을 수 없습니다." });
+
+    // (선택) 소유자 검사 — 토큰 미들웨어가 있다면 req.user.id 사용
+    const owner = String(folder.ownerId || "");
+    const me = String(req.user?.id || userId || "");
+    if (owner && me && owner !== me) {
+      return res.status(403).json({ message: "권한 없음" });
+    }
+
+    folder.title = title.trim();
+    await folder.save();
+
+    res.json({ id: String(folder._id), title: folder.title });
+  } catch (err) {
+    console.error("updateFolderTitle 실패:", err);
+    res.status(500).json({ message: "서버 에러" });
+  }
+};
+
+// 폴더 삭제
+export const deleteFolder = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 🔐 userId를 안전하게 추출 (req.user가 없을 수 있음)
+    const userId =
+      req.user?.id ||
+      req.user?._id ||
+      req.user?.userId ||
+      req.query?.userId ||
+      req.body?.userId ||
+      null;
+
+    // ID 형식 체크
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "유효하지 않은 폴더 ID" });
+    }
+
+    // 로그인/요청자 확인 (원한다면 형식까지 체크)
+    if (!userId /* || !mongoose.Types.ObjectId.isValid(userId) */) {
+      return res.status(401).json({ message: "로그인이 필요합니다." });
+    }
+
+    // 폴더 존재/소유자 확인
+    const folder = await BookmarkFolder.findById(id).select("ownerId").lean();
+    if (!folder) {
+      return res.status(404).json({ message: "폴더를 찾을 수 없습니다." });
+    }
+
+    // 소유자 비교(문자열로 통일)
+    if (String(folder.ownerId || "") !== String(userId || "")) {
+      return res.status(403).json({ message: "삭제 권한이 없습니다." });
+    }
+
+    // 삭제
+    await BookmarkFolder.deleteOne({ _id: id });
+    return res.json({ ok: true });
+  } catch (err) {
+    // console.error("deleteFolder 실패:", err);
+    return res.status(500).json({ message: "서버 에러", error: String(err?.message || err) });
+  }
+};
+

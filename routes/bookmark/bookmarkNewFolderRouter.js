@@ -1,5 +1,7 @@
 import express from "express";
-import { bookmarkFolder, createFolder, getAllFolders, getFolderDetail, getTopTypedFolders  } from "../../controllers/archiveBookmark/bookmarkController.js";
+import { 
+        bookmarkFolder, createFolder, getAllFolders, getFolderDetail, getTopTypedFolders, updateFolderTitle, deleteFolder
+    } from "../../controllers/archiveBookmark/bookmarkController.js";
 
 const bookmarkNewFolder = express.Router()
 
@@ -8,5 +10,7 @@ bookmarkNewFolder.post("/folder", createFolder)
 bookmarkNewFolder.get("/folders", getAllFolders)
 bookmarkNewFolder.get("/folders/top", getTopTypedFolders);
 bookmarkNewFolder.get("/folders/:id", getFolderDetail);
+bookmarkNewFolder.put("/folders/:id", updateFolderTitle);
+bookmarkNewFolder.delete("/folders/:id", deleteFolder);
 
 export default bookmarkNewFolder
