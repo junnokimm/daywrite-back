@@ -14,6 +14,7 @@ import bookmarkNewFolder from "./bookmark/bookmarkNewFolderRouter.js";
 import playList from "./bookmark/playListRouter.js";
 import communityRouter from "./community/communityRouter.js";
 import likeRouter from "./community/likeRouter.js";
+import commentRouter from "./community/commentRouter.js";
 
 const rootRouter = express.Router();
 
@@ -29,5 +30,6 @@ rootRouter.use("/bookmarkFolder", bookmarkNewFolder);
 rootRouter.use("/playList", playList);
 rootRouter.use("/community", communityRouter);
 rootRouter.use("/likes", likeRouter);
+rootRouter.use("/community", commentRouter);
 
 export default rootRouter;
