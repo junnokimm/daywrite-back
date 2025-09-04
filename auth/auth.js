@@ -18,6 +18,7 @@ const passwordConfig = {
 // 로그인 로직
 const passwordVerify = async (email, password, done) => {
   try {
+    console.log('Passport 로그인 시도:', { email });
     const user = await User.findOne({ email }).lean();
 
     //user가 없다면 로직실행
@@ -36,8 +37,10 @@ const passwordVerify = async (email, password, done) => {
 
       if (result) {
         // 로그인 성공
+        console.log('Passport 인증 성공:', user.email);
         return done(null, user, { message: "로그인 성공!" });
       } else {
+        console.log('비밀번호 불일치');
         return done(null, false, { message: "비밀번호가 일치하지 않습니다!" });
       }
     });
