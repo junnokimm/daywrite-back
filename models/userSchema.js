@@ -10,6 +10,13 @@ const userSchema = new Schema({
   token: String,
   provider: { type: String, default: "local" },
 
+  level:{ type: Number, default: 1 },
+  exp: { type: Number, default: 0 },
+
+  // 연속 출석 관련 필드
+  consecutiveLoginDays: { type: Number, default: 0 },
+  lastLoginDate: { type: String, default: "" },
+
   // 프로필 이미지 경로 필드 추가
   profileImageUrl: { type: String, default: "" },
 
