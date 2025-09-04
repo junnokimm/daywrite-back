@@ -1,4 +1,3 @@
-// passport auth 설정값 파일
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { ExtractJwt, Strategy as JwtStrategy } from "passport-jwt";
@@ -45,25 +44,41 @@ const passwordVerify = async (email, password, done) => {
       }
     });
   } catch (error) {
-    return done(err);
+    return done(error);
   }
 };
 
+const cookieExtractor = (req) => req?.cookies?.accessToken || null;
+
 const jwtConfig = {
-  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  jwtFromRequest: ExtractJwt.fromExtractors([
+    ExtractJwt.fromAuthHeaderAsBearerToken(), // Bearer 허용
+    cookieExtractor, // 쿠키 허용
+  ]),
   secretOrKey: process.env.JWT_SECRET,
 };
 
 const jwtVerify = async (jwtPayload, done) => {
   try {
-    const email = jwtPayload.email;
-    const user = await User.findOne({ email: email }).lean();
+    
+    // id / _id / email 다 체크
+    const id = jwtPayload?.id || jwtPayload?._id;
+    const email = jwtPayload?.email;
+
+    let user = null;
+    if (id) {
+      user = await User.findById(id).lean();
+    }
+    if (!user && email) {
+      user = await User.findOne({ email }).lean();
+    }
+
     if (!user) {
-      return done(null, false, { message: "올바르지 않은 인증정보입니다. " });
+      return done(null, false, { message: "올바르지 않은 인증정보입니다." });
     }
     return done(null, user);
-  } catch (error) {
-    return done(error);
+  } catch (err) {
+    return done(err);
   }
 };
 

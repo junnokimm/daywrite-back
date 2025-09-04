@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import PlayList from "../../models/bookmark/playListSchema.js";
 import BookmarkPlayedFolder from "../../models/bookmark/bookmarkPlayedFolderSchema.js";
-import path from "path";
 
 // 좋아요 저장
 export const saveLikedSongs = async (req, res) => {
@@ -51,18 +50,6 @@ export const unlikeSong = async (req, res) => {
   res.status(200).json({ message: "좋아요 취소됨", deletedCount: deleted.deletedCount });
 };
 
-
-// 저장된 곡 목록 전체 가져오기
-// export const getLikedSongs = async (req, res) => {
-//   try {
-//     const songs = await PlayList.find().sort({ createdAt: -1 }); // 최근순
-//     res.status(200).json(songs);
-//   } catch (err) {
-//     console.error("좋아요 목록 조회 실패:", err);
-//     res.status(500).json({ message: "서버 오류" });
-//   }
-// };
-
 export const getLikedSongs = async (req, res) => {
   try {
     const { userId } = req.query;
@@ -75,83 +62,77 @@ export const getLikedSongs = async (req, res) => {
   }
 };
 
+const normalizeThumbStr = (t) => {
+  if (!t) return null;
+  t = String(t).replace(/\\/g, "/");
+  if (/^https?:\/\//i.test(t)) return t;     // 절대 URL은 그대로
+  if (t.startsWith("/uploads/")) return t;   // /uploads/... 유지
+  if (t.startsWith("uploads/")) return `/${t}`;
+  return `/uploads/${t.replace(/^\/+/, "")}`;
+};
+
+// const toUploadsFromAnyPath = (p) => {
+//   if (!p) return null;
+//   const s = String(p).replace(/\\/g, "/");
+//   const after = s.split("/uploads/")[1];
+//   return after ? `/uploads/${after}` : normalizeThumbStr(s);
+// };
+
+const toUploadsFromAnyPath = (p) => {
+  if (!p) return null;
+  const s = String(p).replace(/\\/g, "/");
+
+  // 1) 절대 URL이면 그대로 사용 (CDN/외부 URL 지원)
+  if (/^https?:\/\//i.test(s)) return s;
+
+  // 2) 경로 어딘가에 '/uploads/'가 포함되어 있으면 그 뒤로만 잘라 '/uploads/...' 로
+  const idx = s.indexOf("/uploads/");
+  if (idx !== -1) return s.slice(idx);
+
+  // 3) 'uploads/...'로 시작하면 앞에 슬래시만 붙여 정규화
+  if (s.startsWith("uploads/")) return `/${s}`;
+
+  // 4) 여기까지 못 잡으면 알 수 없는 경로 → null (잘못된 입력 방지)
+  return null;
+};
 
 // 폴더 생성
-// export const createPlayedFolder = async (req, res) => {
-  
-//   try {
-//     const { title, selectedIds, userId } = req.body;
-//     // 유효한 ObjectId인지 검증
-//     if (!mongoose.Types.ObjectId.isValid(userId)) {
-//       return res.status(400).json({ message: "유효하지 않은 사용자 ID입니다." });
-//     }
-//   let playlistIds = [];
-//   try {
-//     playlistIds = JSON.parse(selectedIds);
-//   } catch (err) {
-//     return res.status(400).json({ message: "선택한 항목 형식이 올바르지 않습니다." });
-//   }
-//   // 썸네일 경로 구성
-//   let thumbnailUrl = null;
-//   if (req.file) {
-//     const relativePath = path.relative(path.join(process.cwd(), "uploads"), req.file.path);
-//     thumbnailUrl = `/uploads/${relativePath.replace(/\\/g, "/")}`;
-//   }
-
-//   const folder = await BookmarkPlayedFolder.create({
-//     title,
-//     thumbnailUrl,
-//     playlistIds,
-//     user: userId,
-//     type: "곡",
-//   });
-
-//   res.status(201).json({ message: "북마크 폴더 생성 완료", folder });
-//   } catch (err) {
-//     console.error("북마크 폴더 생성 실패:", err);
-//     res.status(500).json({ message: "서버 에러" });
-//   }
-// };
-// 폴더 생성 (JSON 버전)
 export const createPlayedFolder = async (req, res) => {
   try {
     const {
       title,
-      type = "곡",              // 기본값 "곡"
-      playlistIds,             // 배열이어야 함
-      thumbnailUrl,            // /uploads/... (images/thumbnail 응답)
-      imageUpload,             // 이미지 업로드 문서 _id (선택)
-      ownerId,                 // 프론트에서 보내는 uid
-      userId,                  // 예전 키도 허용 (둘 중 하나 받기)
+      type = "곡",
+      playlistIds,
+      thumbnailUrl,   // 문자열로 올 수도 있음
+      imageUpload,    // 선택
+      ownerId,
+      userId,
     } = req.body;
 
     const actualUserId = ownerId || userId;
-    if (!actualUserId) {
-      return res.status(400).json({ message: "userId(=ownerId) 필요" });
-    }
-    if (!mongoose.Types.ObjectId.isValid(actualUserId)) {
-      return res.status(400).json({ message: "유효하지 않은 사용자 ID입니다." });
-    }
-    if (!title?.trim()) {
-      return res.status(400).json({ message: "title 필요" });
-    }
-    if (!Array.isArray(playlistIds) || playlistIds.length === 0) {
-      return res.status(400).json({ message: "playlistIds 배열 필요" });
-    }
+    if (!actualUserId) return res.status(400).json({ message: "userId(=ownerId) 필요" });
+    if (!mongoose.Types.ObjectId.isValid(actualUserId)) return res.status(400).json({ message: "유효하지 않은 사용자 ID입니다." });
+    if (!title?.trim()) return res.status(400).json({ message: "title 필요" });
+    if (!Array.isArray(playlistIds) || playlistIds.length === 0) return res.status(400).json({ message: "playlistIds 배열 필요" });
 
-    // ObjectId 유효성 체크(선택)
-    const invalid = playlistIds.some(id => !mongoose.Types.ObjectId.isValid(id));
-    if (invalid) {
-      return res.status(400).json({ message: "playlistIds에 유효하지 않은 ID가 있습니다." });
+    // 🔑 여기서 ‘무조건’ 표준화
+    let computedThumb = null;
+    if (req.file?.path) {
+      // multer로 받은 실제 파일 경로 → /uploads/... 로 변환
+      computedThumb = toUploadsFromAnyPath(req.file.path);
+    } else {
+      // 프론트에서 문자열로 온 경우 → /uploads/... 또는 절대 URL로
+      // computedThumb = normalizeThumbStr(thumbnailUrl);
+      computedThumb = toUploadsFromAnyPath(thumbnailUrl);
     }
 
     const folder = await BookmarkPlayedFolder.create({
       title,
-      type,               // "곡"
+      type,
       playlistIds,
-      thumbnailUrl,
-      imageUpload,        // 스키마에 있으면 저장
-      user: actualUserId, // BookmarkPlayedFolder는 user(ObjectId ref) 사용
+      thumbnailUrl: computedThumb,  // ← 표준화된 경로만 저장
+      imageUpload,
+      user: actualUserId,
     });
 
     res.status(201).json({ message: "북마크 폴더 생성 완료", folder });
@@ -160,48 +141,6 @@ export const createPlayedFolder = async (req, res) => {
     res.status(500).json({ message: "서버 에러" });
   }
 };
-
-
-// 모든 Played 폴더 조회
-// export const getAllPlayedFolders = async (req, res) => {
-//   try {
-//     const folders = await BookmarkPlayedFolder.find().populate("playlistIds").populate("user", "nickname");;
-//     const result = folders.map(folder => ({
-//       id: folder._id,
-//       title: folder.title,
-//       thumbnailUrl: folder.thumbnailUrl,
-//       type: folder.type,
-//       count: folder.playlistIds.length,
-//       likeCount: folder.likeCount,
-//       userNickname: folder.user?.nickname || "알 수 없음", // ✅ 닉네임 추가
-//     }));
-
-//     res.status(200).json(result);
-//   } catch (err) {
-//     console.error("Played 폴더 전체 조회 실패:", err);
-//     res.status(500).json({ message: "조회 실패" });
-//   }
-// };
-
-// ✅ 공용 유틸: 문자열 경로를 항상 '/uploads/...' 또는 'http...'로 보정
-const normalizeThumbStr = (t) => {
-  if (!t) return null;
-  // 역슬래시 → 슬래시
-  t = String(t).replace(/\\/g, "/");
-
-  // 완전한 URL이면 그대로
-  if (/^https?:\/\//i.test(t)) return t;
-
-  // '/uploads/...'면 그대로
-  if (t.startsWith("/uploads/")) return t;
-
-  // 'uploads/...'면 앞에 '/' 붙이기
-  if (t.startsWith("uploads/")) return `/${t}`;
-
-  // 상대경로면 '/uploads/' 접두
-  return `/uploads/${t.replace(/^\/+/, "")}`;
-};
-
 
 // 모든 Played 폴더 조회 (내 것 + 타입옵션)
 export const getAllPlayedFolders = async (req, res) => {
@@ -239,15 +178,6 @@ export const getAllPlayedFolders = async (req, res) => {
     res.status(500).json({ message: "조회 실패" });
   }
 };
-
-  // const normalizeThumb = (folder = {}) => {
-  // const t = folder.thumbnailUrl;
-  //   if (!t) return null;
-  //   if (/^https?:\/\//i.test(t)) return t;
-  //   if (t.startsWith("/uploads/")) return t;
-  //   if (t.startsWith("uploads/")) return `/${t}`;
-  //   return `/uploads/${t.replace(/^\/+/, "")}`;
-  // };
 
 // ✅ played 폴더 상세
 export const getPlayedFolderDetail = async (req, res) => {
@@ -336,5 +266,70 @@ export const getTopPlayedFolders = async (req, res) => {
   } catch (err) {
     console.error("Top played folders 조회 실패:", err);
     res.status(500).json({ message: "조회 실패" });
+  }
+};
+
+// 폴더 제목 변경 (Played)
+export const updatePlayedFolderTitle = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, userId } = req.body; // 토큰 미들웨어 없으면 userId 함께 받기
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "유효하지 않은 폴더 ID" });
+    }
+    if (!title || !title.trim()) {
+      return res.status(400).json({ message: "title 필요" });
+    }
+
+    const folder = await BookmarkPlayedFolder.findById(id);
+    if (!folder) return res.status(404).json({ message: "폴더를 찾을 수 없습니다." });
+
+    // 소유자 체크: Played는 소유자 필드가 user 임
+    const owner = String(folder.user || "");
+    const me = String(req.user?.id || userId || req.query?.userId || "");
+    if (owner && me && owner !== me) {
+      return res.status(403).json({ message: "권한 없음" });
+    }
+
+    folder.title = title.trim();
+    await folder.save();
+
+    res.json({ id: String(folder._id), title: folder.title });
+  } catch (err) {
+    console.error("updatePlayedFolderTitle 실패:", err);
+    res.status(500).json({ message: "서버 에러" });
+  }
+};
+
+// 폴더 삭제 (Played)
+export const deletePlayedFolder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId =
+      req.user?.id ||
+      req.body?.userId ||
+      req.query?.userId ||
+      null;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "유효하지 않은 폴더 ID" });
+    }
+    if (!userId /* || !mongoose.Types.ObjectId.isValid(userId) */) {
+      return res.status(401).json({ message: "로그인이 필요합니다." });
+    }
+
+    const folder = await BookmarkPlayedFolder.findById(id).select("user").lean();
+    if (!folder) return res.status(404).json({ message: "폴더를 찾을 수 없습니다." });
+
+    if (String(folder.user || "") !== String(userId || "")) {
+      return res.status(403).json({ message: "삭제 권한이 없습니다." });
+    }
+
+    await BookmarkPlayedFolder.deleteOne({ _id: id });
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("deletePlayedFolder 실패:", err);
+    return res.status(500).json({ message: "서버 에러", error: String(err?.message || err) });
   }
 };

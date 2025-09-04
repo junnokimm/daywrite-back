@@ -10,8 +10,8 @@ const JWT_SECRET = process.env.JWT_SECRET;
 export const localStrategy = async (req, res, next) => {
     console.log('=== authController.localStrategy 시작 ===');
 
-    const error = req.error; // 오류
-    const authenticatedUser = req.user; // 인증된 유저
+    const error = req.error;
+    const authenticatedUser = req.user;
     const info = req.info;
     console.log("authenticatedUser", authenticatedUser)
     console.log("error", error)
@@ -81,17 +81,23 @@ export const localStrategy = async (req, res, next) => {
             // jwt.sign(토큰에 담을 정보, 시크릿 키, 옵션)
             const accessToken = jwt.sign(
                 {
-                    email : authenticatedUser.email,
-                    issuer : 'daywrite',
+                    userId: String(authenticatedUser._id),
+                    email: authenticatedUser.email,
+                    issuer: 'daywrite',
                 },
                 JWT_SECRET,
                 {
-                    expiresIn : '24h'
+                    expiresIn: '7d'
                 }
             )
 
+            // 응답에 user도 같이 내려줌
+            const { password, ...user } = authenticatedUser.toObject ? authenticatedUser.toObject() : authenticatedUser;
+
             return res.status(200).json({
-                accessToken : accessToken,
+                message: "로그인 성공",
+                accessToken: accessToken,
+                user: user,
                 streakInfo: {
                     consecutiveDays: streakResult.consecutiveDays,
                     bonusXP: bonusXP,
@@ -104,37 +110,41 @@ export const localStrategy = async (req, res, next) => {
             // 연속 출석 처리 실패해도 로그인은 성공 처리
             const accessToken = jwt.sign(
                 {
-                    email : authenticatedUser.email,
-                    issuer : 'daywrite',
+                    userId: String(authenticatedUser._id),
+                    email: authenticatedUser.email,
+                    issuer: 'daywrite',
                 },
                 JWT_SECRET,
                 {
-                    expiresIn : '24h'
+                    expiresIn: '7d'
                 }
             )
 
+            const { password, ...user } = authenticatedUser.toObject ? authenticatedUser.toObject() : authenticatedUser;
+
             return res.status(200).json({
-                accessToken : accessToken
+                message: "로그인 성공",
+                accessToken: accessToken,
+                user: user
             })
         }
 
     })
-
 }
 
 export const jwtStrategy = async (req, res, next) => {
     try {
         const jwtAuthenticatedUser = req.user;
-        const {password, ...user} = jwtAuthenticatedUser;
-        console.log("jwtStrategy 사용자:", user); // ✅ 이 줄은 user 선언 이후에 위치해야 함
-    
-        res.status(200).json({
+        const {password, ...user} = jwtAuthenticatedUser?.toObject
+            ? jwtAuthenticatedUser.toObject()
+            : jwtAuthenticatedUser;
+
+        return res.status(200).json({
             message : "자동 로그인 성공",
             user: user
         })
     } catch (error) {
-        console.log("authController jwtStrategy error")
-        console.error(error)
-        next(error)
+        console.error("authController jwtStrategy error", error);
+        next(error);
     }
 }
