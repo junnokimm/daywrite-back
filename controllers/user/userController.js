@@ -1,5 +1,7 @@
 import User from "../../models/userSchema.js";
 import bcrypt from "bcrypt";
+import Level from "../../utils/leve.js";
+import { calculateLoginStreak, getCurrentDate } from "../../utils/utils.js";
 
 
 // 회원가입
@@ -97,18 +99,63 @@ export const loginUser = async (req, res) => {
     // 유저가 있다면
     // 비밀번호 검사
     const hashedPassword = foundUser.password;
-    bcrypt.compare(password, hashedPassword, (err, result) => {
+    bcrypt.compare(password, hashedPassword, async(err, result) => {
       if(err){
         console.error(err)
       }else if(result){
         // 비밀번호 일치
         console.log("result", result)
-        const {password, ...currentUser} = foundUser;
+        
+        // 연속 출석 계산 및 처리
+        console.log('로그인 전 사용자 정보:', {
+          lastLoginDate: foundUser.lastLoginDate,
+          consecutiveLoginDays: foundUser.consecutiveLoginDays
+        });
+        
+        const streakResult = calculateLoginStreak(
+          foundUser.lastLoginDate, 
+          foundUser.consecutiveLoginDays || 0
+        );
+
+        console.log('연속출석 계산 결과:', streakResult);
+
+        let bonusXP = 0;
+        let streakMessage = "";
+        let updatedUser = foundUser;
+
+        // 새로운 출석이거나 연속 출석이 증가한 경우
+        if (streakResult.isNewStreak || streakResult.consecutiveDays > foundUser.consecutiveLoginDays) {
+          bonusXP = Level.getAttendanceBonusExp(streakResult.consecutiveDays);
+          
+          // 사용자 정보 업데이트
+          try {
+            updatedUser = await User.findByIdAndUpdate(
+              foundUser._id, 
+              {
+                consecutiveLoginDays: streakResult.consecutiveDays,
+                lastLoginDate: getCurrentDate(),
+                exp: foundUser.exp + bonusXP
+              },
+              { new: true }
+            ).lean();
+
+            streakMessage = `연속 출석 ${streakResult.consecutiveDays}일! +${bonusXP}XP 획득!`;
+          } catch (updateError) {
+            console.error('연속 출석 업데이트 오류:', updateError);
+          }
+        }
+
+        const {password, ...currentUser} = updatedUser;
         
         return res.status(200).json({
           currentUser : currentUser,
           isLogin : true,
-          message : "로그인이 완료되었습니다."
+          message : "로그인이 완료되었습니다.",
+          streakInfo: {
+            consecutiveDays: updatedUser.consecutiveLoginDays || streakResult.consecutiveDays,
+            bonusXP: bonusXP,
+            message: streakMessage
+          }
         })
         
       }else {
