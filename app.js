@@ -25,10 +25,6 @@ connect();
 // 앱 초기화
 const app = express();
 const port = 8000;
-
-// // uploads 폴더를 정적으로 열기
-// app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
-
 const __dirname = path.resolve(); // ESM 환경이라면 필요
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -39,6 +35,7 @@ const CORS_OPTIONS = {
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
+
 app.use(cors(CORS_OPTIONS));
 app.options(/.*/, cors(CORS_OPTIONS));
 
@@ -51,6 +48,9 @@ app.get("/", (req, res) => {
 });
 
 // 라우터 전에 passport 미들웨어가 먼저 실행하도록 로직 수정
+initializePassport();
+app.use(passport.initialize());
+
 // 라우터
 app.use("/api/writing", writingRouter);
 app.use("/api/music", musicRouter);
@@ -60,10 +60,6 @@ app.use("/api/inquiry", inquiryRouter);
 app.use("/api/main", mainRouter);
 app.use("/auth", authRouter);
 app.use("/api/upload/background", backgroundUploadRouter);
-
-
-app.use(passport.initialize());
-initializePassport();
 
 // 모든 라우터는 rootRouter에서 관리
 app.use("/api", rootRouter); // 여기 수정했어요
